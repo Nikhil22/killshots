@@ -121,10 +121,8 @@ print(MarketStructure.isBottom([7,5,8,6,7]))
 print(MarketStructure.isBottom([7,5,8,6]))
 print(MarketStructure.isBottom([7,5,8,6,5]))
 print(MarketStructure.isBottom([7,1,8,6,5,2,3]))
+print(MarketStructure.isBottom([7,8,1,3,2,4,0.5, 4, -1]))
+print(MarketStructure.isBottom([7,8,1,3,2,4, 1.2, 4, 1]))
+print(MarketStructure.isBottom([7,8,1,3,2,4, 1.2, 4, 1.3]))
 
-
-# In[ ]:
-
-
-[7,5,8,6]
 
