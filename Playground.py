@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[1]:
 
 
 import pandas as pd
 
 
-# In[52]:
+# In[2]:
 
 
 df = pd.DataFrame({
@@ -32,7 +32,7 @@ aa = df.loc["cat"].apply(m, axis=1)
 display(aa)
 
 
-# In[60]:
+# In[3]:
 
 
 print ("------------------Group by-------------------")
@@ -56,7 +56,7 @@ print ("------------------idxTosubDF dictionary-------------------")
 print (idxTosubDF)
 
 
-# In[62]:
+# In[4]:
 
 
 print ("------------------Access list of c for an index-------------------")
@@ -64,7 +64,7 @@ print ("------------------Access list of c for an index-------------------")
 print (idxTosubDF["cat"]["c"].tolist())
 
 
-# In[83]:
+# In[5]:
 
 
 prices = [1,2,3,4,5]
@@ -75,54 +75,81 @@ for i in range(len(prices)):
     print ("leading price", prices[index])
 
 
-# In[107]:
+# In[27]:
 
 
-class MarketStructure:
-
-    @staticmethod
-    def isBottom(prices):
-        '''
-        leading bottom must be >= to lowest point and to its right
-        '''
-        leadingBottom = None
-        lowestPoint = {"value": prices[0], "index": 0}
+def bottom(prices):
+    '''
+    leading bottom must be >= to lowest point and to its right
+    current price must be > leading bottom price
+    '''
+    leadingBottom = None
+    lowestPoint = {"value": prices[0], "index": 0}
+    currentPrice = prices[-1]
         
-        for i in range(len(prices)):
-            index = len(prices) - i - 1
-            price = prices[index]
-            if price < lowestPoint['value']:
-                lowestPoint = {"value": price, "index": index}
+    for i in range(len(prices)):
+        index = len(prices) - i - 1
+        price = prices[index]
+        if price < lowestPoint['value']:
+            lowestPoint = {"value": price, "index": index}
                 
-            if index < len(prices) - 1 and index > 0:
-                mid = price
-                right = prices[index + 1]
-                left = prices[index -1]
-                if MarketStructure.isEmpireBottom(mid, left, right):
-                    if leadingBottom is None:
-                        leadingBottom = {"value": price, "index": index}
+        if index < len(prices) - 1 and index > 0:
+            mid = price
+            right = prices[index + 1]
+            left = prices[index -1]
+            if isEmpireBottom(mid, left, right):
+                if leadingBottom is None:
+                    leadingBottom = {"value": price, "index": index}
             
-        return (
-            leadingBottom['value'] >= lowestPoint['value']
-            and leadingBottom['index'] > lowestPoint["index"]
-        )
+    state = (
+        leadingBottom is not None
+        and leadingBottom['value'] >= lowestPoint['value']
+        and leadingBottom['index'] > lowestPoint["index"]
+        and currentPrice > leadingBottom['value']
+    )
+        
+    return {
+        "state": state,
+        "lowestPrice": lowestPoint['value'],
+        "leadingBottomPrice": leadingBottom['value'] if leadingBottom is not None else None,
+        "currentPrice": currentPrice
+    }
+        
+    
+def isEmpireTop(mid, left, right):
+    return mid > right and mid > left
+
+def isEmpireBottom(mid, left, right):
+    return mid < right and mid < left
     
 
-    @staticmethod
-    def isEmpireTop(mid, left, right):
-        return mid >= right and mid >= left
+assert bottom([7,5,8,6,7])["state"] is True
+assert bottom([7,5,8,6])["state"] is False
+assert bottom([7,5,8,6,5])["state"] is False
+assert bottom([7,1,8,6,5,2,3])["state"] is True
+assert bottom([7,8,1,3,2,4,0.5, 4, -1])["state"] is False
+assert bottom([7,8,1,3,2,4, 1.2, 4, 1])["state"] is False
+assert bottom([7,8,1,3,2,4, 1.2, 4, 1.3])["state"] is True
+assert bottom([7,8,1,3,2,4, 1.2, 4, 1])["state"] is False
+assert bottom([5,4,3,2,1])["state"] is False
+assert bottom([1,2,3,4,5])["state"] is False
 
-    @staticmethod
-    def isEmpireBottom(mid, left, right):
-        return mid <= right and mid <= left
-    
 
-print(MarketStructure.isBottom([7,5,8,6,7]))
-print(MarketStructure.isBottom([7,5,8,6]))
-print(MarketStructure.isBottom([7,5,8,6,5]))
-print(MarketStructure.isBottom([7,1,8,6,5,2,3]))
-print(MarketStructure.isBottom([7,8,1,3,2,4,0.5, 4, -1]))
-print(MarketStructure.isBottom([7,8,1,3,2,4, 1.2, 4, 1]))
-print(MarketStructure.isBottom([7,8,1,3,2,4, 1.2, 4, 1.3]))
+# In[7]:
+
+
+series = df.loc["cat"]["c"]
+display(series)
+print ("------------------Slicing a series, last N elements-------------------")
+display(series[-1:])
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
 
 
