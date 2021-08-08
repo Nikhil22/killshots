@@ -12,8 +12,11 @@ def bottom(prices):
     midPoint = None
     breakout = None
     lowestPoint = {"value": prices[0], "index": 0}
-    bottomsHeightThreshold = 0.8
+    bottomsHeightThreshold = 0.95
     bottomsWidthThreshold = math.floor(len(prices)/3) #bars
+    midPointHeightThreshold = 0.9
+    breakoutHeightThreshold = 0.9
+    currentPrice = prices[0]
         
     for i in range(len(prices)):
         index = len(prices) - i - 1
@@ -35,7 +38,7 @@ def bottom(prices):
                 if laggingBottom is None:
                     # lagging bottom is lower than
                     if (
-                            mid / leadingBottom['value']  >= bottomsHeightThreshold 
+                            1 >= mid / leadingBottom['value'] >= bottomsHeightThreshold 
                             and index + bottomsWidthThreshold <= leadingBottom["index"]
                         ):
                             laggingBottom = {"value": price, "index": index}
@@ -50,6 +53,9 @@ def bottom(prices):
         and midPoint['value'] > leadingBottom['value']
         and breakout['value'] > midPoint['value'] 
         and lowestPoint['index'] <= laggingBottom['index']
+        and 1 > leadingBottom['value'] / midPoint['value'] >= midPointHeightThreshold 
+        and 1 >= midPoint['value'] / breakout['value'] >= breakoutHeightThreshold
+        and currentPrice > laggingBottom['value']
     )
         
     return {
@@ -58,6 +64,7 @@ def bottom(prices):
         "leadingBottomPrice": leadingBottom['value'] if leadingBottom is not None else None,
         "midPointPrice": midPoint['value'] if midPoint is not None else None,
         "breakoutPrice": breakout['value'] if breakout is not None else None,
+        "currentPrice": currentPrice
     }
     
 def findMidpoint(laggingBottom, leadingBottom, prices):
