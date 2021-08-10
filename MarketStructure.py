@@ -8,7 +8,6 @@ doubleBottomParameters = {
 
 def advancedDoubleBottom(prices, symbol):
     allBottoms = []
-    
     lowestPoint = {"value": prices[0], "index": 0}
     bottomsHeightThreshold = doubleBottomParameters["bottomsHeightThreshold"]
     bottomsWidthThreshold = math.floor(len(prices)/3) #bars
@@ -20,7 +19,6 @@ def advancedDoubleBottom(prices, symbol):
         index = len(prices) - i - 1
         price = prices[index]
         
-        # Update lowest point
         if price < lowestPoint['value']:
             lowestPoint = {"value": price, "index": index}
         
@@ -38,14 +36,16 @@ def advancedDoubleBottom(prices, symbol):
             continue
         midPoint = findMidpoint(laggingBottom, leadingBottom, prices)
         breakout = findBreakout(leadingBottom, prices)
+        lowestPointBetween = findLowestPointBetween(laggingBottom, leadingBottom, prices)
         # if pass, return, if not, keep looking
         state = (
             leadingBottom is not None
             and laggingBottom is not None
             and midPoint is not None
+            and lowestPoint['index'] <= laggingBottom['index']
+            and lowestPointBetween['value'] >= laggingBottom['value']
             and midPoint['value'] > leadingBottom['value']
             and breakout['value'] > midPoint['value'] 
-            and lowestPoint['index'] <= laggingBottom['index']
             and 1 > leadingBottom['value'] / midPoint['value'] >= midPointHeightThreshold 
             and 1 >= midPoint['value'] / breakout['value'] >= breakoutHeightThreshold
             and currentPrice > laggingBottom['value']
@@ -164,6 +164,17 @@ def findBreakout(leadingBottom, prices):
         if price > breakOut['value']:
             breakOut = {"value": price, "index": i +  leadingBottom["index"]}
     return breakOut
+    
+def findLowestPointBetween(laggingBottom, leadingBottom, prices):
+    subListLeftIndex = laggingBottom["index"] + 1
+    subListRightIndex = leadingBottom["index"]
+    subList = prices[subListLeftIndex:subListRightIndex]
+    lowestPoint = {"value": subList[0], "index": subListLeftIndex}
+    for i in range(len(subList)):
+        price = subList[i]
+        if price < lowestPoint['value']:
+            lowestPoint = {"value": price, "index": i + laggingBottom["index"]}
+    return lowestPoint
     
 def isEmpireTop(mid, left, right):
     return mid > right and mid > left
