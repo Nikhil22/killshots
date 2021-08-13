@@ -8,13 +8,10 @@ class Killshots(QCAlgorithm):
         # self.SetEndDate(2020, 12, 31)
         self.SetCash(24000) 
         self.AddUniverseSelection(KSUniverseModel())
-        self.UniverseSettings.Resolution = Resolution.Hour
+        self.UniverseSettings.Resolution = Resolution.Minute
         self.riskPerTrade = 0.005
         self.minCash = self.Portfolio.Cash / 2
-        self.DefaultOrderProperties.TimeInForce = TimeInForce.Day
-        self.theoreticalPortfolioCash = self.Portfolio.Cash
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.At(0, 0), self.ResetTheoreticalPortfolioCash)
-        
+
     def OnData(self, slice):
         for key in slice.Bars:
             symbol = key.Value.Symbol
@@ -26,14 +23,15 @@ class Killshots(QCAlgorithm):
             )
             if currentPrice <= stopLossPrice:
                 continue
-            if self.theoreticalPortfolioCash - (entryPrice * quantity) <= self.minCash:
+            if self.Portfolio.Cash - (entryPrice * quantity) <= self.minCash:
                 continue
             if len(self.Transactions.GetOpenOrders(symbol)) > 0:
                 continue
             if self.Securities[symbol].Invested:
                 continue
-            self.LimitOrder(symbol, quantity, entryPrice)
-            self.theoreticalPortfolioCash -= (entryPrice * quantity)
+            if currentPrice > entryPrice:
+                continue
+            self.MarketOrder(symbol, quantity)
 
         # Take profit, stop loss
         for kvp in self.Securities:
@@ -50,6 +48,3 @@ class Killshots(QCAlgorithm):
                 
                 if close <= SharedState.getStopLossPrice(symbol):
                     self.Liquidate(symbol)
-
-    def ResetTheoreticalPortfolioCash(self):
-        self.theoreticalPortfolioCash = self.Portfolio.Cash
