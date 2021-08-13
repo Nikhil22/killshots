@@ -17,7 +17,7 @@ class KSUniverseModel(FundamentalUniverseSelectionModel):
                 and self.NotInvested(algorithm, x.Symbol)
             )
             # x.Symbol for x in coarse if (
-            #     "QDEL" in str(x.Symbol)
+            #     "TBLT" in str(x.Symbol)
             #     and self.NotInvested(algorithm, x.Symbol)
             # )
         ]
@@ -25,8 +25,7 @@ class KSUniverseModel(FundamentalUniverseSelectionModel):
     def SelectFine(self, algorithm, fine):
         MAX_SHARE_COUNT = 50e6
         MAX_BARS_BACK = 200
-        LENGTH_OF_BOTTOM = 45
-        
+        LENGTH_OF_BOTTOM = 30
         initialFilter = [
             x.Symbol for x in fine if (
                 x.CompanyProfile.SharesOutstanding <= MAX_SHARE_COUNT
@@ -41,7 +40,10 @@ class KSUniverseModel(FundamentalUniverseSelectionModel):
             
         def isBottom(x):
             symbol = x
-            closingPrices = SharedState.getHistory(symbol)["close"][-LENGTH_OF_BOTTOM:].tolist()
+            history = SharedState.getHistory(symbol)
+            if history is None:
+                return False
+            closingPrices = history["close"][-LENGTH_OF_BOTTOM:].tolist()
             bottom = MarketStructure.advancedDoubleBottom(closingPrices, symbol)
             if bottom["state"] is True:
                 SharedState.updateStopLossPrice(symbol, bottom['laggingBottomPrice'])
