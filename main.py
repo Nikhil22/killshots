@@ -1,5 +1,6 @@
 from KSUniverseModel import KSUniverseModel
 import SharedState
+import math
 
 class Killshots(QCAlgorithm):
 
@@ -33,7 +34,9 @@ class Killshots(QCAlgorithm):
                 continue
             self.MarketOrder(symbol, quantity)
             holdings = self.Portfolio[symbol].Quantity
-            self.LimitOrder(symbol, -holdings, SharedState.getTakeProfitPrice(symbol))
+            quantityToSell = math.floor(holdings/2)
+            orderTicket = self.LimitOrder(symbol, -quantityToSell, SharedState.getTakeProfitPrice(symbol))
+            SharedState.setTakeProfitOrderTicket(symbol, orderTicket)
 
         # Take profit, stop loss
         for kvp in self.Securities:
@@ -44,6 +47,36 @@ class Killshots(QCAlgorithm):
                 high = security.High
                 close = security.Close
                 low = security.Low
+                highestPrice = SharedState.getHighestPrice(symbol)
+                
+                if highestPrice is not None and close > SharedState.getHighestPrice(symbol):
+                    SharedState.setHighestPrice(symbol, close)
+                    updateFields = UpdateOrderFields()
+                    updateFields.StopPrice = close * 0.9
+                    trailingStopTicket = SharedState.getTrailingStopOrderTicket(symbol)
+                    trailingStopTicket.Update(updateFields)
                 
                 if close <= SharedState.getStopLossPrice(symbol):
                     self.Liquidate(symbol)
+                    
+    def OnOrderEvent(self, orderEvent):
+        order = self.Transactions.GetOrderById(orderEvent.OrderId)
+        symbol = order.Symbol
+        takeProfitOrderTicket = SharedState.getTakeProfitOrderTicket(symbol)
+        trailingStopOrderTicket = SharedState.getTrailingStopOrderTicket(symbol)
+        
+        if orderEvent.Status != OrderStatus.Filled:
+            return
+    
+        if takeProfitOrderTicket is not None and order.Id == takeProfitOrderTicket.OrderId:
+            holdings = self.Portfolio[symbol].Quantity
+            fillPrice = orderEvent.FillPrice
+            ticket = self.StopMarketOrder(symbol, -holdings, 0.9 * fillPrice)
+            SharedState.setTrailingStopOrderTicket(symbol, ticket)
+            SharedState.setHighestPrice(symbol, fillPrice)
+            return
+        
+        if trailingStopOrderTicket is not None and order.Id == trailingStopOrderTicket.OrderId:
+            SharedState.removeHighestPrice(symbol)
+            SharedState.removeTrailingStopOrderTicket(symbol)
+            SharedState.removeTakeProfitOrderTicket(symbol)
