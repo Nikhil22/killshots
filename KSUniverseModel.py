@@ -6,10 +6,9 @@ import MarketStructure
 class KSUniverseModel(FundamentalUniverseSelectionModel):
     def __init__(self, filterFineData = True, universeSettings = None):
         super().__init__(filterFineData, universeSettings)
-        self.averages = {}
         
     def SelectCoarse(self, algorithm, coarse):
-        MIN_VOLUME = 300e3
+        MIN_VOLUME = 1e6
         
         return [
             x.Symbol for x in coarse if (
@@ -26,41 +25,22 @@ class KSUniverseModel(FundamentalUniverseSelectionModel):
     def SelectFine(self, algorithm, fine):
         MAX_SHARE_COUNT = 50e6
         MAX_BARS_BACK = 200
-        LENGTH_OF_BOTTOM = 30
-        MIN_VOLUME = 300e3
+        LENGTH_OF_BOTTOM = 45
         
         initialFilter = [
             x.Symbol for x in fine if (
                 x.CompanyProfile.SharesOutstanding <= MAX_SHARE_COUNT
                 # no shell companies
                 and x.AssetClassification.MorningstarIndustryCode != 10350010
-                #div yield?
             )
         ]
         
         historySlices = algorithm.History(initialFilter, MAX_BARS_BACK, Resolution.Daily)
         for symbol, history in historySlices.groupby(level=0):
-            if symbol not in self.averages:
-                self.averages[symbol] = SymbolData(symbol, history)
-            else:
-                avg = self.averages[symbol]
-                latestTime = history.loc[symbol].index[-1]
-                lastClose = history.loc[symbol].close.iloc[-1]
-                lastVolume = history.loc[symbol].volume.iloc[-1]
-                avg.updatePriceAvgs(latestTime, lastClose)
-                # avg.updateVolumeAvgs(latestTime, lastVolume)
-            
             SharedState.updateHistory(symbol, history)
-                
-        def passesAverages(x):
-            return (
-                x.isUptrend() 
-                # and x.hasSufficientVolume(MIN_VOLUME)
-            )
-        initialFilter2 = list(filter(lambda x: passesAverages(x), self.averages.values()))
-        
+            
         def isBottom(x):
-            symbol = x.symbol
+            symbol = x
             closingPrices = SharedState.getHistory(symbol)["close"][-LENGTH_OF_BOTTOM:].tolist()
             bottom = MarketStructure.advancedDoubleBottom(closingPrices, symbol)
             if bottom["state"] is True:
@@ -72,9 +52,9 @@ class KSUniverseModel(FundamentalUniverseSelectionModel):
                 return True
             return False
             
-        hasBottom = list(filter(isBottom, initialFilter2))
+        hasBottom = list(filter(isBottom, initialFilter))
         
-        finalSymbols = [x.symbol for x in hasBottom]
+        finalSymbols = [x for x in hasBottom]
         
         return finalSymbols
         
