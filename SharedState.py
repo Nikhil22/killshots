@@ -7,7 +7,7 @@ def updateHistory(key, value):
     _histories[str(key)] = value
     
 def getHistory(key):
-    return _histories[str(key)]
+    return _histories.get(str(key))
         
  
 _stopLossPrices = {}
@@ -16,7 +16,7 @@ def updateStopLossPrice(key, value):
     _stopLossPrices[str(key)] = value
     
 def getStopLossPrice(key):
-    return _stopLossPrices[str(key)]
+    return _stopLossPrices.get(str(key))
     
 
 _takeProfitPrices = {}
@@ -29,7 +29,7 @@ def updateTakeProfitPrice(key, values, multiple):
     _takeProfitPrices[str(key)] = takeProfitPrice
 
 def getTakeProfitPrice(key):
-    return _takeProfitPrices[str(key)]
+    return _takeProfitPrices.get(str(key))
 
     
 _entryPrices = {}
@@ -38,7 +38,7 @@ def updateEntryPrice(key, value):
     _entryPrices[str(key)] = value
     
 def getEntryPrice(key):
-    return _entryPrices[str(key)]
+    return _entryPrices.get(str(key))
 
     
 def calculateQuantity(entryPrice, stopLossPrice, maxStake):
@@ -57,3 +57,39 @@ def addToSymbolsWithOpenOrders(value):
     
 def getSymbolsWithOpenOrders():
     return _symbolsWithOpenOrders
+    
+    
+_takeProfitOrderTickets = {}
+
+def setTakeProfitOrderTicket(key, value):
+    _takeProfitOrderTickets[str(key)] = value
+    
+def getTakeProfitOrderTicket(key):
+    return _takeProfitOrderTickets.get(str(key))
+    
+def removeTakeProfitOrderTicket(key):
+     _takeProfitOrderTickets.pop(key, None)
+    
+    
+_highestPrice = {}
+
+def setHighestPrice(key, value):
+    _highestPrice[str(key)] = value
+    
+def getHighestPrice(key):
+    return _highestPrice.get(str(key))
+    
+def removeHighestPrice(key):
+    _highestPrice.pop(key, None)
+    
+    
+_trailingStopTickets = {}
+
+def setTrailingStopOrderTicket(key, value):
+    _trailingStopTickets[str(key)] = value
+    
+def getTrailingStopOrderTicket(key):
+    return _trailingStopTickets.get(str(key))
+    
+def removeTrailingStopOrderTicket(key):
+     _trailingStopTickets.pop(key, None)
