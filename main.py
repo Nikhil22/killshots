@@ -32,6 +32,8 @@ class Killshots(QCAlgorithm):
             if currentPrice > entryPrice:
                 continue
             self.MarketOrder(symbol, quantity)
+            holdings = self.Portfolio[symbol].Quantity
+            self.LimitOrder(symbol, -holdings, SharedState.getTakeProfitPrice(symbol))
 
         # Take profit, stop loss
         for kvp in self.Securities:
@@ -42,9 +44,6 @@ class Killshots(QCAlgorithm):
                 high = security.High
                 close = security.Close
                 low = security.Low
-                if high >= SharedState.getTakeProfitPrice(symbol):
-                    self.Liquidate(symbol)
-                    continue
                 
                 if close <= SharedState.getStopLossPrice(symbol):
                     self.Liquidate(symbol)
