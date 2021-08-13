@@ -1,12 +1,11 @@
 from KSUniverseModel import KSUniverseModel
 import SharedState
-import MarketStructure
 
 class Killshots(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2020, 3, 1)
-        self.SetEndDate(2020, 3, 31)
+        self.SetStartDate(2021, 1, 1)
+        # self.SetEndDate(2020, 12, 31)
         self.SetCash(24000) 
         self.AddUniverseSelection(KSUniverseModel())
         self.UniverseSettings.Resolution = Resolution.Hour
@@ -35,7 +34,6 @@ class Killshots(QCAlgorithm):
                 continue
             self.LimitOrder(symbol, quantity, entryPrice)
             self.theoreticalPortfolioCash -= (entryPrice * quantity)
-            SharedState.addToSymbolsWithOpenOrders(symbol)
 
         # Take profit, stop loss
         for kvp in self.Securities:
@@ -49,6 +47,7 @@ class Killshots(QCAlgorithm):
                 if high >= SharedState.getTakeProfitPrice(symbol):
                     self.Liquidate(symbol)
                     continue
+                
                 if close <= SharedState.getStopLossPrice(symbol):
                     self.Liquidate(symbol)
 
