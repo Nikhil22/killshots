@@ -93,3 +93,17 @@ def getTrailingStopOrderTicket(key):
     
 def removeTrailingStopOrderTicket(key):
      _trailingStopTickets.pop(key, None)
+     
+_stoppedOutSymbols = set()
+
+def addStoppedOutSymbol(symbol):
+    _stoppedOutSymbols.add(str(symbol))
+    
+def getStoppedOutSymbols():
+    return _stoppedOutSymbols
+    
+def removeStoppedOutSymbol(symbol):
+    _stoppedOutSymbols.remove(str(symbol))
+    
+def isStoppedOutSymbol(symbol):
+    return str(symbol) in _stoppedOutSymbols
