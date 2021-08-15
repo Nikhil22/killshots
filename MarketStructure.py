@@ -6,7 +6,8 @@ doubleBottomParameters = {
     "midPointHeightThreshold": 0.9
 }
 
-def advancedDoubleBottom(prices, symbol):
+def advancedDoubleBottom(closingPrices, openingPrices):
+    prices = closingPrices
     allBottoms = []
     lowestPoint = {"value": prices[0], "index": 0}
     bottomsHeightThreshold = doubleBottomParameters["bottomsHeightThreshold"]
@@ -45,6 +46,7 @@ def advancedDoubleBottom(prices, symbol):
             and lowestPoint['index'] <= laggingBottom['index']
             and lowestPointBetween['value'] >= laggingBottom['value']
             and midPoint['value'] > leadingBottom['value']
+            and breakout['value'] > openingPrices[breakout['index']] 
             and breakout['value'] > midPoint['value'] 
             and 1 > leadingBottom['value'] / midPoint['value'] >= midPointHeightThreshold 
             and 1 >= midPoint['value'] / breakout['value'] >= breakoutHeightThreshold
